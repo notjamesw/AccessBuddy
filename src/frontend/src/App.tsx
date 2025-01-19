@@ -1,18 +1,36 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
 import './App.css';
-// import Home from './components/Home.tsx';
-// import Info from './components/Info.tsx';
+import Home from './components/Home.tsx';
+import Info from './components/Info.tsx';
 
 function App() {
   return (
     <Router>
-      <div className="min-w-80 min-h-96 bg-black text-white">
-        <div>
-          <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0,0,256,256">
-            <g fill-opacity="0.8" fill="#ededed" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><g transform="scale(5.12,5.12)"><path d="M25,2c-12.703,0 -23,10.297 -23,23c0,12.703 10.297,23 23,23c12.703,0 23,-10.297 23,-23c0,-12.703 -10.297,-23 -23,-23zM25,11c1.657,0 3,1.343 3,3c0,1.657 -1.343,3 -3,3c-1.657,0 -3,-1.343 -3,-3c0,-1.657 1.343,-3 3,-3zM29,38h-2h-4h-2v-2h2v-13h-2v-2h2h4v2v13h2z"></path></g></g>
-          </svg>
-        </div>
+      <div className="App">
+        <nav className="flex justify-between items-center pt-8 bg-slate-900 text-white font-semibold text-md shadow-md h-16 px-6 md:px-10">
+          <Link to="/">
+            <img
+              className="h-16 active:brightness-50"
+              src="/images/accessBuddy1.png"
+              alt="Home"
+            />
+          </Link>
+          <div className="flex space-x-6">
+            <Link to="/info">
+              <img
+                className="h-8 w-8 rounded-full bg-slate-800 hover:brightness-150 hover:ring active:bg-slate-900"
+                src="/images/infoIcon.png"
+                alt="About"
+              />
+            </Link>
+          </div>
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/info" element={<Info />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </div>
     </Router>
   );
