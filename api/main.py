@@ -29,6 +29,7 @@ from flask_cors import CORS  # Import CORS
 
 
 
+
 app = Flask(__name__)
 CORS(app)
 img_path = "@../temp/image.png"
@@ -126,7 +127,7 @@ def process_audio_command(command):
             elif matched_command == "analyze screen":
                 global_matched_command = "analyze_screen"
                 analyze_result = analyze_screen()
-                return "Screen analyzed successfully." if analyze_result else "Failed to analyze screen."
+                return analyze_result if analyze_result else "Failed to analyze screen."
             else:
                 global_matched_command="search"
                 extractProduct(command)
@@ -424,6 +425,7 @@ def start_recording():
         # Start a thread to record audio
         def record_audio():
             global is_recording, audio_frames
+            time.sleep(2.3)  # Wait for one second before starting the recording
             with sd.InputStream(samplerate=16000, channels=1, dtype='int16', callback=audio_callback):
                 while is_recording:
                     sd.sleep(100)

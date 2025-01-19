@@ -1,6 +1,8 @@
+import { sleep } from "openai/core.mjs";
 import React, { useEffect, useState } from "react";
 
 const PORT = 3000;
+
 
 const MicrophoneInput = () => {
   const [output, setOutput] = useState("");
@@ -10,7 +12,7 @@ const MicrophoneInput = () => {
     setIsRecording(true);
     readOutput("Recording started, please speak now.");
     console.log("Start recording initiated.");
-    fetch(`http://localhost:${PORT}/start-recording`, { method: "POST" })
+    fetch(`http://localhost:${PORT}/start_recording`, { method: "POST" })
       .then((response) => response.json())
       .then(() => {
         setIsRecording(true);
@@ -23,7 +25,7 @@ const MicrophoneInput = () => {
     setIsRecording(false);
     readOutput("Recording stopped, processing your request.");
     console.log("Stop recording initiated.");
-    fetch(`http://localhost:${PORT}/stop-recording`, { method: "POST" })
+    fetch(`http://localhost:${PORT}/stop_recording`, { method: "POST" })
       .then((response) => response.json())
       .then((data) => {
         console.log("Response from stop-recording:", data);
@@ -31,18 +33,26 @@ const MicrophoneInput = () => {
         const result = data.result || "";
         const commandType = data.command || "unknown";
 
-        
         console.log("Processed Command Type:", commandType);
         console.log("Processed Result:", result);
 
         // Handle different command types dynamically
-        handleCommand(commandType, result, data);
+        // handleCommand(commandType, result, data);
       })
       .catch((error) => console.error("Error stopping recording:", error));
   };
 
   const handleCommand = (commandType, result, data) => {
     console.log("Handling Command:", commandType);
+  
+    // Check for unknown or empty results early
+    if (!commandType || commandType === "unknown") {
+      console.log("Unknown Command or Empty Command Detected.");
+      setOutput("Command not recognized. Can I assist with anything else?");
+      readOutput("Command not recognized. Can I assist with anything else?");
+      return;
+    }
+  
     switch (commandType) {
       case "analyze_screen":
         const analysis = data?.data?.answer || "Analysis failed.";
@@ -50,30 +60,35 @@ const MicrophoneInput = () => {
         setOutput(analysis);
         readOutput(`Screen analyzed successfully: ${analysis}`);
         break;
+  
       case "search":
+        if (!result.trim()) {
+          console.log("Search Command Triggered with Empty Query.");
+          setOutput("Search command detected, but no query provided.");
+          readOutput("Search command detected, but no query provided.");
+          break;
+        }
         console.log("Search Command Result:", result);
         setOutput(result);
         readOutput(`Search command detected: ${result}`);
         break;
+  
       case "scroll_up":
         console.log("Scroll Up Command.");
         setOutput("Scrolled up. Can I assist with anything else?");
         readOutput("Scrolled up. Can I assist with anything else?");
         break;
+  
       case "scroll_down":
         console.log("Scroll Down Command.");
         setOutput("Scrolled down. Can I assist with anything else?");
         readOutput("Scrolled down. Can I assist with anything else?");
         break;
-      case "unknown":
-        console.log("Unknown Command.");
-        setOutput("Command not recognized. Can I assist with anything else?");
-        readOutput("Command not recognized. Can I assist with anything else?");
-        break;
+  
       default:
-        console.log("Default Command Handler.");
-        setOutput(result);
-        readOutput(`${result}. Can I assist with anything else?`);
+        console.log("Unhandled Command Type:", commandType);
+        setOutput(result || "Unhandled command type.");
+        readOutput(`${result || "Unhandled command type."} Can I assist with anything else?`);
         break;
     }
   };
@@ -82,7 +97,7 @@ const MicrophoneInput = () => {
     console.log("Text to be spoken:", text);
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = "en-US";
-    speech.pitch = 1.5;
+    speech.pitch = 1.3;
     speech.rate = 1.1;
 
     window.speechSynthesis.speak(speech);
