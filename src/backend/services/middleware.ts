@@ -1,10 +1,10 @@
 import { promises as fsPromises } from "fs";
 import path from "path";
 import { openai } from "./openAIClient";
-import record from "node-record-lpcm16";
 import { Writable } from "stream";
 
-let recording: any;
+let recorder = require('node-record-lpcm16');
+let recording: any
 let audioData: Buffer[] = [];
 
 /**
@@ -12,7 +12,7 @@ let audioData: Buffer[] = [];
  */
 export function startRecording(): void {
   audioData = [];
-  recording = record
+  recording = recorder
     .record({
       sampleRate: 44100,
       verbose: true,

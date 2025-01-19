@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import axios from "axios";
-import { analyzeImageBuffer, findFromImage, getImage } from "./services/middleware.ts";
+import { analyzeImageBuffer, findFromImage, getImage } from "./services/middleware";
 
 const app = express();
 app.use(express.json());
