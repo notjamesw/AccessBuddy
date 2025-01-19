@@ -364,7 +364,7 @@ def perform_search(query):
     pyautogui.keyUp("command")
 
     # Allow time for the new tab to open
-    time.sleep(1)
+    # time.sleep(1)
 
     # Type the search query
     pyautogui.write(query)
