@@ -9,6 +9,7 @@ from flask import Flask, jsonify, request
 import os
 import base64
 from PIL import Image
+from speechbrain.inference import EncoderDecoderASR
 
 port = 3000
 app = Flask(__name__)
@@ -17,6 +18,13 @@ current_directory = os.path.dirname(__file__)
 img_path = os.path.join(current_directory, "../temp/image.png")
 
 reader = easyocr.Reader(["en"], gpu=False)
+
+def convert_speech_to_text():
+    asr_model = EncoderDecoderASR.from_hparams(
+        source="speechbrain/asr-conformer-transformerlm-librispeech", 
+        savedir="../temp/pretrained_models/asr-transformer-transformerlm-librispeech")
+    text = asr_model.transcribe_file("../temp/output.wav")
+    return text
 
 def smooth_scroll(amount, duration=1):
     steps = 25
