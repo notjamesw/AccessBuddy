@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import VoiceRecorder from "./components/VoiceRecorder";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [processingState, setProcessingState] = useState<
+    "idle" | "recording" | "processing" | "speaking"
+  >("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleVoiceInput = async (_audioBlob: Blob) => {
+    setProcessingState("processing");
+    setError(null);
+
+    try {
+      setProcessingState("speaking");
+    } catch (error) {
+      console.error("Error processing voice command:", error);
+      setError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setProcessingState("idle");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="w-[300px] h-[400px] p-2 flex flex-col">
+      <div className="text-left mb-4">
+        <h1 className="text-xl font-bold text-gray-800">AccessBuddy.ai</h1>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
 
-export default App
+      <div className="flex-grow flex flex-col items-center justify-center">
+        <VoiceRecorder
+          isListening={isListening}
+          onStart={() => setIsListening(true)}
+          onStop={() => setIsListening(false)}
+          onVoiceInput={handleVoiceInput}
+        />
+
+        {error && <div className="text-red-500 mt-4 text-sm">{error}</div>}
+
+        <div className="mt-2 text-sm text-gray-600">
+          Status: {processingState}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
