@@ -6,9 +6,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const axios_1 = __importDefault(require("axios"));
+const cors_1 = __importDefault(require("cors")); // Import the CORS middleware
 const cain_1 = require("./services/cain");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)()); // Enable CORS for all origins
 // 1) Open a new tab
 app.post("/open-tab", async (req, res) => {
     const { question } = req.body;
@@ -171,12 +173,9 @@ app.post("/start-recording", async (req, res) => {
 // Stop recording and process command
 app.post("/stop-recording", async (req, res) => {
     try {
-        // Send stop recording request to the Python backend
         const response = await axios_1.default.post("http://127.0.0.1:3000/stop_recording");
-        const { result } = response.data; // Result is the processed command output from Python
-        // Handle the processed command
+        const { result } = response.data;
         if (result === "analyze_screen") {
-            // Call the analyze screen endpoint
             await axios_1.default.post("http://127.0.0.1:2022/analyze-screen", {});
             return res.json({
                 text: "Screen analysis initiated.",
@@ -184,7 +183,6 @@ app.post("/stop-recording", async (req, res) => {
             });
         }
         else if (result === "scroll_up") {
-            // Call the scroll-page endpoint for scrolling up
             await axios_1.default.post("http://127.0.0.1:2022/scroll-page", { question: "scroll up" });
             return res.json({
                 text: "Scrolled up successfully.",
@@ -192,7 +190,6 @@ app.post("/stop-recording", async (req, res) => {
             });
         }
         else if (result === "scroll_down") {
-            // Call the scroll-page endpoint for scrolling down
             await axios_1.default.post("http://127.0.0.1:2022/scroll-page", { question: "scroll down" });
             return res.json({
                 text: "Scrolled down successfully.",

@@ -7,6 +7,7 @@ import { analyzeImageBuffer, findFromImage, getImage } from "./services/cain";
 const app = express();
 app.use(express.json());
 
+
 // 1) Open a new tab
 app.post("/open-tab", async (req: Request, res: Response) => {
   const { question } = req.body;

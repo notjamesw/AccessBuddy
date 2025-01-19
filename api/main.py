@@ -22,11 +22,15 @@ from threading import Thread
 import json
 
 
-
+global_matched_command = None
 
 port = 3000
-app = Flask(__name__)
+from flask_cors import CORS  # Import CORS
 
+
+
+app = Flask(__name__)
+CORS(app)
 img_path = "@../temp/image.png"
 reader = easyocr.Reader(["en"], gpu=False)  
 
@@ -53,6 +57,7 @@ def process_audio_command(command):
     Processes a user command by sending it to OpenAI API and matching it against predefined commands.
     Logs the input command, OpenAI's matched command, and the action taken.
     """
+    global global_matched_command  # Use the global variable
     prompt = f"""
     You are an intelligent assistant. Match the user's command to one of the following predefined commands:
     {', '.join(COMMANDS.keys())}.
@@ -76,6 +81,7 @@ def process_audio_command(command):
 
         # Extract the result correctly
         matched_command = response.choices[0].message.content.strip()
+        global_matched_command = matched_command  # Update the global variable
 
         # Log the input command and matched command
         print(f"[LOG] User Command: {command.strip()}")
@@ -84,38 +90,45 @@ def process_audio_command(command):
         # Ensure the matched command is valid
         print(COMMANDS.keys())
         if matched_command in COMMANDS.keys():
-
             print(f"[LOG] Executing Command: {matched_command}")
 
             # Execute the matched command
-
             if matched_command == "scroll up":
                 smooth_scroll(amount=100, duration=1)
+                global_matched_command = "scroll_up"
                 return "Scrolled up"
             elif matched_command == "scroll down":
                 smooth_scroll(amount=-100, duration=1)
+                global_matched_command = "scroll_down"
                 return "Scrolled down"
             elif matched_command == "open tab":
                 pyautogui.keyDown("command")
                 pyautogui.press("t")
                 pyautogui.keyUp("command")
+                global_matched_command = "open_tab"
                 return "Opened new tab"
             elif matched_command == "close tab":
                 pyautogui.keyDown("command")
                 pyautogui.press("w")
                 pyautogui.keyUp("command")
+                global_matched_command = "close_tab"
                 return "Closed current tab"
             elif matched_command == "press enter":
                 pyautogui.press("enter")
+                global_matched_command = "press_enter"
                 return "Pressed Enter"
             elif matched_command == "start recording":
+                global_matched_command = "start_recording"
                 return "Started recording"
             elif matched_command == "stop recording":
+                global_matched_command = "stop_recording"
                 return "Stopped recording"
             elif matched_command == "analyze screen":
+                global_matched_command = "analyze_screen"
                 analyze_result = analyze_screen()
                 return "Screen analyzed successfully." if analyze_result else "Failed to analyze screen."
             else:
+                global_matched_command="search"
                 extractProduct(command)
         else:
             print(f"[LOG] Unrecognized Command: {command.strip()}")
@@ -124,7 +137,6 @@ def process_audio_command(command):
     except Exception as e:
         print(f"Error processing command with OpenAI: {e}")
         return f"Error processing command: {str(e)}"
-    
 
 
 
@@ -422,10 +434,9 @@ def start_recording():
     except Exception as e:
         return jsonify(isSuccess=False, error=str(e)), 500
 
-# Stop recording endpoint
 @app.route("/stop_recording", methods=["POST"])
 def stop_recording():
-    global is_recording, audio_frames, audio_file_path
+    global is_recording, audio_frames, audio_file_path, global_matched_command
     try:
         is_recording = False
         print("Recording stopped. Saving audio...")
@@ -442,14 +453,40 @@ def stop_recording():
         text = convert_speech_to_text()
         print(f"Transcribed Text: {text}")
 
-        # Process the command and execute the corresponding action
-        command_result = process_audio_command(text)
-        print(f"Command Result: {command_result}")
+        # Reset the global matched command
+        global_matched_command = None
 
-        return jsonify(isSuccess=True, result=command_result)
+        # Process the command using process_audio_command
+        command_result = process_audio_command(text)
+
+        # Retrieve the matched command type from the global variable
+        command_type = global_matched_command
+
+        # Default to unknown if no valid command is matched
+        if command_type is None or command_type not in COMMANDS.keys():
+            command_type = "unknown"
+
+        print(f"Command Result: {command_result}")
+        print(f"Command Type: {global_matched_command}")
+
+        # Construct the JSON response
+        response = {
+            "isSuccess": True,
+            "result": command_result,
+            "command": global_matched_command
+        }
+
+        # Print the JSON response for debugging
+        print(f"JSON Response: {response}")
+
+        return jsonify(response)
     except Exception as e:
-        return jsonify(isSuccess=False, error=str(e)), 500
-    
+        error_response = {"isSuccess": False, "error": str(e)}
+        print(f"Error Response: {error_response}")
+        return jsonify(error_response), 500
+
+
+
     
 
 if __name__ == "__main__":
