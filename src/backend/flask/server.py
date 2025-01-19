@@ -8,8 +8,6 @@ import Levenshtein
 from flask import Flask, jsonify, request
 import os
 import base64
-import wave
-import pyaudio
 from PIL import Image
 
 port = 3000
