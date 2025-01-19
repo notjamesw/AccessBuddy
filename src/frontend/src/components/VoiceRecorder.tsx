@@ -8,27 +8,34 @@ const MicrophoneInput = () => {
 
   const startRecording = () => {
     setIsRecording(true);
-    // fetch(`http://localhost:${PORT}/start-recording`, { method: "POST" })
-    //   .then((response) => response.json())
-    //   .then(() => setIsRecording(true))
-    //   .catch((error) => console.error("Error starting recording:", error));
+    readOutput("Recording started, please speak now.");
+    fetch(`http://localhost:${PORT}/start-recording`, { method: "POST" })
+      .then((response) => response.json())
+      .then(() => setIsRecording(true))
+      .catch((error) => console.error("Error starting recording:", error));
   };
 
   const stopRecording = () => {
     setIsRecording(false);
-    // fetch(`http://localhost:${PORT}/stop-recording`, { method: "POST" })
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     setIsRecording(false);
-    //     setOutput(data.result); // Assuming backend returns `{ result: "Processed Text" }`
-    //     readOutput(data.result);
-    //   })
-    //   .catch((error) => console.error("Error stopping recording:", error));
+    readOutput("Recording stopped, processing your request.");
+    fetch(`http://localhost:${PORT}/stop-recording`, { method: "POST" })
+      .then((response) => response.json())
+      .then((data) => {
+        setIsRecording(false);
+        setOutput(data.result); // Assuming backend returns `{ result: "Processed Text" }`
+        readOutput(data.result);
+      })
+      .catch((error) => console.error("Error stopping recording:", error));
   };
 
   const readOutput = (text: string) => {
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = "en-US"; // Set language
+    
+    speech.lang = 'en-US';
+    speech.pitch = 1.5;
+    speech.rate = 1.1;
+
+    // Speak the text
     window.speechSynthesis.speak(speech);
   };
 
