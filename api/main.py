@@ -51,7 +51,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def process_audio_command(command):
     """
     Processes a user command by sending it to OpenAI API and matching it against predefined commands.
-    If the command matches "search", it uses GPT to extract the search term.
+    Logs the input command, OpenAI's matched command, and the action taken.
     """
     prompt = f"""
     You are an intelligent assistant. Match the user's command to one of the following predefined commands:
@@ -59,11 +59,11 @@ def process_audio_command(command):
     
     ONLY return one of these exact predefined commands, and nothing else.
     
-    User Command: "{command.strip()}"
+    User Command: "{command}"
     """
 
     try:
-        # Send the initial prompt to OpenAI API to match the command
+        # Send the prompt to OpenAI API
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -74,52 +74,49 @@ def process_audio_command(command):
             temperature=0  # Deterministic behavior
         )
 
-        # Extract the matched command
+        # Extract the result correctly
         matched_command = response.choices[0].message.content.strip()
 
         # Log the input command and matched command
         print(f"[LOG] User Command: {command.strip()}")
         print(f"[LOG] Matched Command: {matched_command}")
 
-        # Handle "search" separately
-        if matched_command == "search":
-            search_query = extract_search_query_with_gpt(command)  # Use GPT to extract search term
-            perform_search(search_query)  # Perform the search
-            return f"Searching for: {search_query}"
+        # Ensure the matched command is valid
+        print(COMMANDS.keys())
+        if matched_command in COMMANDS.keys():
 
-        # Validate the command
-        if matched_command in COMMANDS.values():
             print(f"[LOG] Executing Command: {matched_command}")
 
             # Execute the matched command
-            if matched_command == "scroll_up":
+
+            if matched_command == "scroll up":
                 smooth_scroll(amount=100, duration=1)
                 return "Scrolled up"
-            elif matched_command == "scroll_down":
+            elif matched_command == "scroll down":
                 smooth_scroll(amount=-100, duration=1)
                 return "Scrolled down"
-            elif matched_command == "open_tab":
+            elif matched_command == "open tab":
                 pyautogui.keyDown("command")
                 pyautogui.press("t")
                 pyautogui.keyUp("command")
                 return "Opened new tab"
-            elif matched_command == "close_tab":
+            elif matched_command == "close tab":
                 pyautogui.keyDown("command")
                 pyautogui.press("w")
                 pyautogui.keyUp("command")
                 return "Closed current tab"
-            elif matched_command == "press_enter":
+            elif matched_command == "press enter":
                 pyautogui.press("enter")
                 return "Pressed Enter"
-            elif matched_command == "start_recording":
+            elif matched_command == "start recording":
                 return "Started recording"
-            elif matched_command == "stop_recording":
+            elif matched_command == "stop recording":
                 return "Stopped recording"
-            elif matched_command == "analyze_screen":
+            elif matched_command == "analyze screen":
                 analyze_result = analyze_screen()
                 return "Screen analyzed successfully." if analyze_result else "Failed to analyze screen."
             else:
-                return f"Command not implemented: {matched_command}"
+                extractProduct(command)
         else:
             print(f"[LOG] Unrecognized Command: {command.strip()}")
             return f"Unrecognized command: {command.strip()}"
@@ -127,19 +124,21 @@ def process_audio_command(command):
     except Exception as e:
         print(f"Error processing command with OpenAI: {e}")
         return f"Error processing command: {str(e)}"
+    
 
 
 
-def extract_search_query_with_gpt(transcribed_text):
+def extractProduct(command):
     """
-    Extracts the search query from the user's transcribed text using GPT.
+    Extracts the product name from the user's command using GPT and searches for it in a new tab.
     """
-    custom_prompt = f"""
-    You are an intelligent assistant. Extract the search term from the user's transcribed text.
-    The transcribed text may contain a request to search for something.
-    ONLY return the search term, and nothing else.
+    # Define the custom prompt for GPT to extract the product name
+    prompt = f"""
+    You are an intelligent assistant. Extract the product name or search term from the user's command.
+    The user's command may contain phrases like "search for", "look up", or similar.
+    ONLY return the product name or search term, and nothing else.
 
-    Transcribed Text: "{transcribed_text.strip()}"
+    User Command: "{command.strip()}"
     """
 
     try:
@@ -147,22 +146,28 @@ def extract_search_query_with_gpt(transcribed_text):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an assistant extracting search terms."},
-                {"role": "user", "content": custom_prompt}
+                {"role": "system", "content": "You are an assistant that extracts search terms."},
+                {"role": "user", "content": prompt}
             ],
             max_tokens=50,
             temperature=0  # Deterministic behavior
         )
 
-        # Extract and return the search term
-        search_term = response.choices[0].message.content.strip()
-        print(f"[LOG] Extracted Search Term: {search_term}")
-        return search_term
+        # Extract the product name from the response
+        product_name = response.choices[0].message.content.strip()
+        print(f"[LOG] Extracted Product: {product_name}")
+
+        # Perform the search
+        if product_name:
+            perform_search(product_name)
+            return f"Searching for: {product_name}"
+        else:
+            return "Failed to extract product name."
 
     except Exception as e:
-        print(f"Error extracting search query with GPT: {e}")
-        return "Error extracting search query"
-    
+        print(f"Error extracting product name with GPT: {e}")
+        return f"Error: {str(e)}"
+
 
 def perform_search(query):
     """
@@ -183,6 +188,7 @@ def perform_search(query):
     pyautogui.press("enter")
 
     print(f"[LOG] Performed search for: {query}")
+
 
 
 
