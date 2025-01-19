@@ -32,9 +32,13 @@ const MicrophoneInput = () => {
         setIsRecording(false);
         const result = data.result || "";
         const commandType = data.command || "unknown";
-
+        
         console.log("Processed Command Type:", commandType);
         console.log("Processed Result:", result);
+        if (result.length > 10) {
+          readOutput(result);
+        }
+
 
         // Handle different command types dynamically
         // handleCommand(commandType, result, data);

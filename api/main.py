@@ -214,6 +214,8 @@ GEMINI_API_KEY = "AIzaSyCewVeJM1NcaNRpoK30h-FJoPfGpCr5n10"
 os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 img_path = "../temp/image.png"
 
+genai.configure(api_key="AIzaSyCewVeJM1NcaNRpoK30h-FJoPfGpCr5n10")
+
 # Initialize Gemini Model
 
 
@@ -305,7 +307,7 @@ def analyze_screen():
         result = analyze_image_with_gemini(base64_image, prompt)
 
         # Return the analysis result
-        return jsonify(isSuccess=True, result=result)
+        return result
     except FileNotFoundError as e:
         return jsonify(isSuccess=False, error=str(e)), 500
     except Exception as e:
