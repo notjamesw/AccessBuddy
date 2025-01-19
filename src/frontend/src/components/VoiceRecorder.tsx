@@ -34,9 +34,9 @@ const MicrophoneInput = () => {
 
     const handleRecording = () => {
         if (isRecording) {
-        stopRecording();
+            stopRecording();
         } else {
-        startRecording();
+            startRecording();
         }
     };
 
@@ -51,7 +51,13 @@ const MicrophoneInput = () => {
 
   return (
     <div>
-      <button onClick={handleRecording}>Record</button>
+      <button onClick={handleRecording}>
+        <img
+          src="/images/micIcon.png"
+          alt="Record"
+          className={`bg-slate-800 w-24 h-24 rounded-full border-2 border-white hover:brightness-150 hover:ring ${isRecording ? 'animate-pulse brightness-150 ring' : '' }`}
+        />
+      </button>
       {output && (
         <div>
           <h2>Output:</h2>
