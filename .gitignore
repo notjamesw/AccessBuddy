@@ -2,3 +2,4 @@ node_modules
 .env
 /api/env/
 vosk-model-small-en-us-0.15
+.env.development
