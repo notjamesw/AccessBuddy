@@ -1,0 +1,11 @@
+Flask==2.3.2
+numpy==1.24.4
+opencv-python==4.8.0.74
+Pillow==10.0.0
+pyautogui==0.9.55
+pyserial==3.5
+easyocr==1.6.2
+python-Levenshtein==0.21.1
+requests==2.31.0
+pyngrok==5.2.2
+dotenv==0.21.0

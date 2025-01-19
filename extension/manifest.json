@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Python Communication Extension",
+  "version": "1.0",
+  "description": "Receives messages from Python or Node to open new tabs.",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "externally_connectable": {
+    "matches": ["*://localhost/*"]
+  }
+}
