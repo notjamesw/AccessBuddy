@@ -12,7 +12,7 @@ function App() {
           <Link className = "ml-4 shadow-xl" to="/">
             <img className = "active:brightness-50" src="/images/accessBuddy1.png" alt="Home" />
           </Link>
-          <Link style={{ marginRight: '1rem' }} to="/about">
+          <Link style={{ marginRight: '1rem' }} to="/info">
             <img className = "rounded-full bg-slate-800 hover:brightness-150 hover:ring active:bg-slate-900" src="/images/infoIcon.png" alt="About" />
           </Link>
         </nav>  
