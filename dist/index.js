@@ -57,7 +57,6 @@ app.post("/press-key", async (req, res) => {
 // 4) Analyze screen
 app.post("/analyze-screen", async (req, res) => {
     try {
-        await axios_1.default.get("http://127.0.0.1:3000/analyze_screen");
         const screenBuffer = await (0, cain_1.getImage)();
         const answer = await (0, cain_1.analyzeImageBuffer)(screenBuffer);
         if (answer === "Image is too large to analyze. Please resize and try again.") {
@@ -139,9 +138,8 @@ app.post("/stop-recording", async (req, res) => {
             return res.status(500).json(formatResponse(false, "Failed to stop recording", "stop_recording"));
         }
         if (result.command === "analyze_screen") {
-            const commandResult = await axios_1.default.post("http://127.0.0.1:2022/analyze-screen", {});
-            console.log("Analyze result:", commandResult);
-            return commandResult;
+            console.log("Analyze screen node");
+            return result.json(formatResponse(true, result.result, "analyze_screen"));
         }
         else if (result.command === "scroll_up") {
             const commandResult = await axios_1.default.post("http://127.0.0.1:2022/scroll-page", { question: "scroll up" });

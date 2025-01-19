@@ -17,9 +17,13 @@ from fuzzywuzzy import fuzz
 import sounddevice as sd
 import numpy as np
 import wave
+import requests
+import google.generativeai as genai
 
 from threading import Thread
 import json
+
+from openai import OpenAI
 
 
 global_matched_command = None
@@ -32,7 +36,7 @@ from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
 CORS(app)
-img_path = "@../temp/image.png"
+img_path = "../temp/image.png"
 reader = easyocr.Reader(["en"], gpu=False)  
 
 
@@ -42,13 +46,11 @@ COMMANDS = {
     "open tab": "open_tab",
     "close tab": "close_tab",
     "press enter": "press_enter",
-    "start recording": "start_recording",
-    "stop recording": "stop_recording",
     "analyze screen": "analyze_screen",
     "search": "search_term"  # New command for searching
 }
 
-from openai import OpenAI
+
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -60,13 +62,13 @@ def process_audio_command(command):
     """
     global global_matched_command  # Use the global variable
     prompt = f"""
-    You are an intelligent assistant. Match the user's command to one of the following predefined commands:
-    {', '.join(COMMANDS.keys())}.
-    
-    ONLY return one of these exact predefined commands, and nothing else.
-    
-    User Command: "{command}"
-    """
+You are an assistant. Match the user's command to one of these predefined commands:
+{', '.join(COMMANDS.keys())}.
+
+The match must be exact and logical based on the input. If no match is found, return "search".
+
+User Command: "{command}"
+"""
 
     try:
         # Send the prompt to OpenAI API
@@ -126,8 +128,8 @@ def process_audio_command(command):
                 return "Stopped recording"
             elif matched_command == "analyze screen":
                 global_matched_command = "analyze_screen"
-                analyze_result = analyze_screen()
-                return analyze_result if analyze_result else "Failed to analyze screen."
+                return analyze_screen()
+                
             else:
                 global_matched_command="search"
                 extractProduct(command)
@@ -139,7 +141,175 @@ def process_audio_command(command):
         print(f"Error processing command with OpenAI: {e}")
         return f"Error processing command: {str(e)}"
 
+GEMINI_API_URL = "https://api.gemini.com/v1/upload"  # Replace with the actual Gemini API endpoint
+GEMINI_API_KEY = "AIzaSyCewVeJM1NcaNRpoK30h-FJoPfGpCr5n10"
 
+COMMANDS = {
+    "scroll up": "scroll_up",
+    "scroll down": "scroll_down",
+    "open tab": "open_tab",
+    "close tab": "close_tab",
+    "press enter": "press_enter",
+    "analyze screen": "analyze_screen",
+    "search": "search_term",
+}
+
+
+def upload_to_gemini(image_path):
+    """
+    Uploads an image to the Gemini API and returns the uploaded file URL.
+    """
+    headers = {"Authorization": f"Bearer {GEMINI_API_KEY}"}
+    try:
+        with open(image_path, "rb") as img_file:
+            files = {"file": img_file}
+            response = requests.post(GEMINI_API_URL, headers=headers, files=files)
+
+        if response.status_code == 200:
+            response_data = response.json()
+            print(f"Gemini API Response: {response_data}")
+            return response_data.get("url")  # Adjust based on the API's response structure
+        else:
+            print(f"Gemini API Error: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        print(f"Error uploading to Gemini: {e}")
+        return None
+
+
+def analyze_image_with_openai(base64_image):
+    """
+    Analyzes an image using OpenAI's GPT model.
+    """
+    retries = 3
+    backoff = 1
+    for attempt in range(retries):
+        try:
+            data_url = f"data:image/png;base64,{base64_image}"
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an assistant analyzing and describing images."},
+                    {"role": "user", "content": "Describe the image content briefly."},
+                    {"role": "user", "content": data_url}
+                ],
+                max_tokens=100,
+                temperature=0.5,
+            )
+            result = response.choices[0].message.content.strip()
+            print(f"OpenAI Response: {result}")
+            return result
+        except Exception as e:
+            if "rate_limit_exceeded" in str(e):
+                print(f"Rate limit exceeded, retrying in {backoff} seconds...")
+                time.sleep(backoff)
+                backoff *= 2
+            else:
+                print(f"Error analyzing image with OpenAI: {e}")
+                return f"Error analyzing image: {str(e)}"
+    return "Error: Failed after multiple attempts."
+
+
+GEMINI_API_KEY = "AIzaSyCewVeJM1NcaNRpoK30h-FJoPfGpCr5n10"
+os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+img_path = "../temp/image.png"
+
+# Initialize Gemini Model
+
+
+
+def shot_screen():
+    """
+    Capture the screen, process the right half of the image, and save it.
+    """
+    try:
+        # Create the directory if it doesn't exist
+        os.makedirs(os.path.dirname(img_path), exist_ok=True)
+
+        # Take a screenshot
+        screenshot = pyautogui.screenshot()
+        screenshot = screenshot.convert("RGB")  # Ensure RGB mode
+
+        # Crop to the right half of the image
+        width, height = screenshot.size
+        right_half = screenshot.crop((width // 2, 0, width, height))
+
+        # Resize the image for efficiency
+        right_half = right_half.resize((512, 512), Image.Resampling.LANCZOS)
+
+        # Save the processed image
+        right_half.save(img_path, "PNG")
+        print(f"Screenshot saved to {img_path}")
+    except Exception as e:
+        print(f"Error capturing screenshot: {e}")
+        raise
+
+
+def encode_image(image_path):
+    """
+    Encode the image at the given path to a base64 string.
+    """
+    try:
+        with open(image_path, "rb") as img_file:
+            base64_string = base64.b64encode(img_file.read()).decode("utf-8")
+            print(f"Base64 Image Size: {len(base64_string)}")
+            return base64_string
+    except Exception as e:
+        print(f"Error encoding image: {e}")
+        raise
+
+
+def analyze_image_with_gemini(base64_image, prompt):
+    model_gem = genai.GenerativeModel(model_name="gemini-1.5-pro")
+    """
+    Use the Gemini API to analyze the image and generate text content.
+    """
+    try:
+        # Make a GenerateContent request to Gemini
+        response = model_gem.generate_content(
+            [
+                {"mime_type": "image/png", "data": base64_image},
+                prompt
+            ]
+        )
+
+        # Extract and return the result
+        result = response.text
+        print(f"Gemini API Response: {result}")
+        return result
+    except Exception as e:
+        print(f"Error analyzing image with Gemini: {e}")
+        return f"Error analyzing image: {str(e)}"
+
+
+@app.route("/analyze_screen", methods=["GET"])
+def analyze_screen():
+    """
+    Capture the screen, process the image, and analyze it using Gemini API.
+    """
+    try:
+        # Capture the screen and save the processed image
+        shot_screen()
+
+        # Ensure the image exists
+        if not os.path.exists(img_path):
+            raise FileNotFoundError(f"Image file not found at path: {img_path}")
+
+        # Encode the image as a base64 string
+        base64_image = encode_image(img_path)
+
+        # Define the prompt for analysis
+        prompt = "Describe the objects and activities in this image."
+
+        # Analyze the image using Gemini API
+        result = analyze_image_with_gemini(base64_image, prompt)
+
+        # Return the analysis result
+        return jsonify(isSuccess=True, result=result)
+    except FileNotFoundError as e:
+        return jsonify(isSuccess=False, error=str(e)), 500
+    except Exception as e:
+        return jsonify(isSuccess=False, error=str(e)), 500
 
 def extractProduct(command):
     """
@@ -157,7 +327,7 @@ def extractProduct(command):
     try:
         # Send the custom prompt to GPT
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are an assistant that extracts search terms."},
                 {"role": "user", "content": prompt}
@@ -273,12 +443,91 @@ def encode_image(image_path):
         return base64_string
 
 def shotScreen():
-    img_path = "/Users/inderjeet/Downloads/SoCalHackathon2024/temp/image.png"
-    os.makedirs(os.path.dirname(img_path), exist_ok=True)  # Ensure directory exists
+    global img_path  # Ensure the global variable is used
+
+    # Create the directory for the image if it doesn't exist
+    os.makedirs(os.path.dirname(img_path), exist_ok=True)
+
+    # Take a screenshot
     screenshot = pyautogui.screenshot()
-    screenshot = screenshot.resize((512, 512))  # Resize to 512x512
     screenshot = screenshot.convert("RGB")  # Ensure RGB mode
-    screenshot.save(img_path, "PNG")  # Save as PNG
+
+    # Crop to the right half of the image
+    width, height = screenshot.size
+    right_half = screenshot.crop((width // 2, 0, width, height))
+
+    # Resize to reduce size
+    right_half = right_half.resize((512, 512), Image.Resampling.LANCZOS)
+
+    # Save the image
+    right_half.save(img_path, "PNG")
+    print(f"Screenshot saved to {img_path}")
+
+# Function to encode an image as a base64 string
+def encode_image(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            base64_string = base64.b64encode(img_file.read()).decode("utf-8")
+            print(f"Base64 Image Size: {len(base64_string)}")
+            return base64_string
+    except Exception as e:
+        print(f"Error encoding image: {e}")
+        raise
+
+# Function to analyze the image using OpenAI
+import time
+
+def analyze_image_with_openai(base64_image):
+    retries = 3
+    backoff = 1  # Start with 1 second
+    for attempt in range(retries):
+        try:
+            data_url = f"data:image/png;base64,{base64_image}"
+
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an assistant analyzing and describing images."},
+                    {"role": "user", "content": "Describe the image content briefly."},
+                    {"role": "user", "content": data_url}
+                ],
+                max_tokens=100,
+                temperature=0.5
+            )
+
+            result = response.choices[0].message.content.strip()
+            print(f"OpenAI Response: {result}")
+            return result
+        except Exception as e:
+            if "rate_limit_exceeded" in str(e):
+                print(f"Rate limit exceeded, retrying in {backoff} seconds...")
+                time.sleep(backoff)
+                backoff *= 2  # Exponential backoff
+            else:
+                print(f"Error analyzing image with OpenAI: {e}")
+                return f"Error analyzing image: {str(e)}"
+    return "Error: Failed after multiple attempts."
+    
+
+def shotScreen():
+    global img_path  # Ensure the global variable is used
+
+    # Create the directory for the image if it doesn't exist
+    os.makedirs(os.path.dirname(img_path), exist_ok=True)
+
+    # Take a screenshot
+    screenshot = pyautogui.screenshot()
+    screenshot = screenshot.convert("RGB")  # Ensure RGB mode
+
+    # Crop to the right half of the image
+    width, height = screenshot.size
+    right_half = screenshot.crop((width // 2, 0, width, height))
+
+    # Resize to reduce size
+    right_half = right_half.resize((512, 512), Image.Resampling.LANCZOS)
+
+    # Save the image
+    right_half.save(img_path, "PNG")
     print(f"Screenshot saved to {img_path}")
 
 def click_word(
@@ -320,18 +569,6 @@ def click_word(
         pyautogui.click()
         print(f"Clicked on '{target_word}' at ({cx_screen}, {cy_screen})")
 
-
-@app.route("/analyze_screen", methods=["GET"])
-def analyze_screen():
-    try:
-        shotScreen()
-        if not os.path.exists(img_path):
-            return jsonify(isSuccess=False, error="Screenshot failed to save.")
-        print("Image captured successfully.")
-        return jsonify(isSuccess=True)
-    except Exception as e:
-        print(f"Error during screenshot: {str(e)}")
-        return jsonify(isSuccess=False, error=str(e))
 
 @app.route("/write_text", methods=["POST"])
 def write_text():
@@ -471,16 +708,18 @@ def stop_recording():
         print(f"Command Result: {command_result}")
         print(f"Command Type: {global_matched_command}")
 
+        # Ensure command_result is a string
+        if not isinstance(command_result, str):
+            command_result = str(command_result)
+
         # Construct the JSON response
         response = {
             "isSuccess": True,
             "result": command_result,
-            "command": global_matched_command
+            "command": command_type
         }
 
-        # Print the JSON response for debugging
         print(f"JSON Response: {response}")
-
         return jsonify(response)
     except Exception as e:
         error_response = {"isSuccess": False, "error": str(e)}

@@ -56,7 +56,7 @@ app.post("/press-key", async (req: Request, res: Response) => {
 // 4) Analyze screen
 app.post("/analyze-screen", async (req: Request, res: Response) => {
   try {
-    await axios.get("http://127.0.0.1:3000/analyze_screen");
+
     const screenBuffer = await getImage();
     const answer = await analyzeImageBuffer(screenBuffer);
 
@@ -144,9 +144,8 @@ app.post("/stop-recording", async (req: Request, res: Response) => {
     }
 
     if (result.command === "analyze_screen") {
-      const commandResult = await axios.post("http://127.0.0.1:2022/analyze-screen", {});
-      console.log("Analyze result:", commandResult);
-      return commandResult;
+      console.log("Analyze screen node");
+      return result.json(formatResponse(true, result.result, "analyze_screen"));
     } else if (result.command === "scroll_up") {
       const commandResult = await axios.post("http://127.0.0.1:2022/scroll-page", { question: "scroll up" });
       console.log("Scroll up result:", commandResult);
