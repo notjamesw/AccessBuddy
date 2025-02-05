@@ -4,7 +4,7 @@ Project for NWHacks 2025 Submission
 Access Buddy turns natural language into website actions like typing and scrolling. It allows all actions to be done with a button click through voice commands. Designed for accessibility, it empowers users with physical and visual impairments to browse effortlessly.
 
 # Demo
-[![Demo Video](https://img.youtube.com/vi-vEi5g8JkuE/0.jpg)](https://www.youtube.com/watch?v=-vEi5g8JkuE)
+[![Demo Video](https://img.youtube.com/vi/-vEi5g8JkuE/0.jpg)](https://www.youtube.com/watch?v=-vEi5g8JkuE)
 
 # Inspiration 🌟
 Research has shown that:
