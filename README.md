@@ -16,14 +16,14 @@ Navigating the web can be a daunting task for these individuals with accessibili
 
 # What It Does 💻
 **Access Buddy** is a Chrome extension that converts natural language into website actions such as:
-- Performs searches seemlessly
+- Performs searches seamlessly
 - Scroll on pages
 - Open new tabs
 - Summarize pages
 
 With its simple and intuitive interface, Access Buddy is designed to help individuals with accessibility needs navigate the web seamlessly, ensuring they can harness the full potential of the internet.
 
->*design detail: through preliminary research, we found that 99% of people who are colourblind have red-green colourblindness.*
+>*design detail: through preliminary research, we found that 99% of people who are colourblind have red-green colourblindness, which is why we designed our extension with a dark blue and white theme.*
 
 # How We Built It 🛠️
 Backend:
@@ -31,6 +31,7 @@ Backend:
 - **sounddevice** for real-time audio capture.
 - **OpenAI API (GPT4o-mini)** for understanding user commands.
 - **PyAutoGUI** to perform automatic actions.
+- **Gemini API** to process and perform screen analysis.
 
 Frontend:
 - **React** and **Tailwind CSS** for styling.
@@ -44,7 +45,7 @@ Frontend:
 # Accomplishments That We're Proud Of 🏆
 - Designing a meaningfully simplistic and unique user interface
 - Integrated OpenAI ChatGPT into the tool, proving to be a powerful tool in assisting in increasing web accessibility
-- Speech-to-text and text-to-speech functionality to improve 
+- Speech-to-text and text-to-speech functionality for further accessibility and accommodation 
 - Took a risk in diving into unfamiliar technology and learning new skills, tackling challenges with persistence, which has paid off in creating a platform that makes surfing the web more accessible
 
 # What We Learned 📚
@@ -53,7 +54,7 @@ Through this project, we gained valuable insights into:
 - Integrating natural language processing with real-world applications.
 - Addressing accessibility challenges through user-centered design.
 - Hardware (Arduino 101) integration with Chrome extension.
-- Prompt engineering and fine-tuning with GPT-4o
+- Prompt engineering and fine-tuning with GPT-4o and Gemini 2.0.
 
 # What's Next for Access Buddy 🚀
 This is just the beginning for Access Buddy! Here’s what we envision next:
