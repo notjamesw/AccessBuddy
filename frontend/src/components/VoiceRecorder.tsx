@@ -30,7 +30,7 @@ const MicrophoneInput = () => {
 
   const readOutput = (text: string) => {
     const speech = new SpeechSynthesisUtterance(text);
-    
+
     speech.lang = 'en-US';
     speech.pitch = 1.5;
     speech.rate = 1.1;
@@ -39,21 +39,21 @@ const MicrophoneInput = () => {
     window.speechSynthesis.speak(speech);
   };
 
-    const handleRecording = () => {
-        if (isRecording) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
-    };
+  const handleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
-    useEffect(() => {
-        if(isRecording) {
-            console.log("Recording...");
-        } else {
-            console.log("Not Recording...");
-        }
-    }, [isRecording]);
+  useEffect(() => {
+    if (isRecording) {
+      console.log("Recording...");
+    } else {
+      console.log("Not Recording...");
+    }
+  }, [isRecording]);
 
 
   return (
@@ -62,7 +62,7 @@ const MicrophoneInput = () => {
         <img
           src="/images/micIcon.png"
           alt="Record"
-          className={`bg-slate-800 w-24 h-24 rounded-full border-2 border-white hover:brightness-150 hover:ring ${isRecording ? 'animate-pulse brightness-150 ring' : '' }`}
+          className={`bg-slate-800 w-24 h-24 rounded-full border-2 border-white hover:brightness-150 hover:ring ${isRecording ? 'animate-pulse brightness-150 ring' : ''}`}
         />
       </button>
       {output && (
