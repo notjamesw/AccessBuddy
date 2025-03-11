@@ -78,3 +78,81 @@ const MicrophoneInput = () => {
 };
 
 export default MicrophoneInput;
+
+
+// const VoiceRecorder = () => {
+//   const [output, setOutput] = useState("");
+//   const [isRecording, setIsRecording] = useState(false);
+
+//   const handleRecording = () => {
+//     if (isRecording) {
+//       stopRecording();
+//     } else {
+//       startRecording();
+//     }
+//   }
+
+//   const readOutput = (message: string) => {
+//     const speech = new SpeechSynthesisUtterance(message);
+
+//     speech.lang = 'en-US';
+//     speech.pitch = 1.5;
+//     speech.rate = 1.1;
+
+//     window.speechSynthesis.speak(speech);
+//   }
+
+//   const startRecording = () => {
+//     readOutput("recording started");
+
+//     fetch(`http://localhost:${PORT}/start-recording`, { method: "POST" })
+//       .then(response => response.json())
+//       .then(() => setIsRecording(true))
+//       .catch((error) => console.error("error starting recording: ", error));
+//   }
+
+//   const stopRecording = () => {
+//     readOutput("recording stopped");
+
+//     fetch(`http://localhost:${PORT}/stop-recording`, { method: "POST" })
+//       .then(response => response.json())
+//       .then((data) => {
+//         setIsRecording(false)
+//         readOutput(data.result);
+//         setOutput(data.result);
+//       })
+//       .then(() => console.log("recording stopped"))
+//       .catch(err => console.error("error stopping recording: ", err));
+//   }
+
+//   useEffect(() => {
+//     if (isRecording) {
+//       console.log("is recording");
+//     } else {
+//       console.log("is not recording");
+//     }
+//   }, [isRecording]);
+
+//   return (
+//     <div>
+//       <button onClick={handleRecording}>
+//         <img
+//           src="/images/micIcon.png"
+//           alt="Record"
+//           className={`bg-slate-800 w-24 h-24 rounded-full border-2 border-white hover:brightness-150 hover:ring ${isRecording ? 'animate-pulse brightness-150 ring' : ''}`}
+//         />
+//       </button>
+
+//       {output && (
+//         <div>
+//           <h2>Output</h2>
+//           <p>{output}</p>
+//         </div>
+//       )}
+
+//       {isRecording ? <p>recording...</p> : <p>not recording</p>}
+//     </div>
+//   )
+// }
+
+// export default VoiceRecorder;
